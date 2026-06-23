@@ -1,0 +1,6 @@
+[2026-06-05 17:09:56] [ALERT - RATE_LIMIT_VIOLATION] User: dz4214 (ID: 492161875367297024) | Evidence: Flooded 6 network packets in 4.0s.
+[2026-06-05 21:01:54] [ALERT - RATE_LIMIT_VIOLATION] User: dz4214 (ID: 492161875367297024) | Evidence: Flooded 6 network packets in 4.0s.
+[2026-06-23 17:10:26] [ALERT - RATE_LIMIT_VIOLATION] User: kwdzzz (ID: 1105171796392677488) | Evidence: Flooded 6 network packets in 4.0s.
+[2026-06-23 17:10:42] [ALERT - RATE_LIMIT_VIOLATION] User: dz4214 (ID: 492161875367297024) | Evidence: Flooded 6 network packets in 4.0s.
+[2026-06-23 17:12:43] [ALERT - PHISHING_ATTEMPT] User: dz4214 (ID: 492161875367297024) | Evidence: Intercepted threat vector: 'ira este enlace gratis free-nitro para ti'
+[2026-06-23 17:14:42] [ALERT - RATE_LIMIT_VIOLATION] User: kwdzzz (ID: 1105171796392677488) | Evidence: Flooded 6 network packets in 4.0s.
