@@ -24,7 +24,7 @@ blacklisted_users = set()
 # --- Cybersecurity configuration parameters
 MAX_MESSAGES = 5        
 TIME_WINDOW = 4.0       
-PHISHING_REGEX = r"(bit\.ly|t\.co|tinyurl\.com|free-nitro|discord-gift|steampowered-crypto)"
+PHISHING_REGEX = r"(bit\.ly|t\.co|tinyurl\.com|free-nitro|discord-gift|steampowered-crypto|nitro.*gift|gift.*nitro)"
 
 # --- Forensic auditing module (Non-blocking) 
 def _write_log(log_entry):
@@ -40,7 +40,7 @@ async def log_security_event(attack_type, username, user_id, evidence_detail):
     # Offload the blocking file write to an executor thread
     loop = asyncio.get_running_loop()
     await loop.run_in_executor(None, _write_log, log_entry)
-    print(f"Security event successfully hard-saved to local logs.")
+    print(f"Security event logged to disk.")
 
 
 class SecurityAuditBot(commands.Bot):
@@ -51,7 +51,7 @@ class SecurityAuditBot(commands.Bot):
         print(f"Cybersecurity Audit WAF System online: {self.user.name}")
         try:
             synced = await self.tree.sync()
-            print(f"Successfully synchronized {len(synced)} infrastructure global slash commands.")
+            print(f"Synced {len(synced)} global slash commands.")
         except Exception as e:
             print(f"Error during command synchronization: {e}")
 
@@ -78,6 +78,11 @@ class SecurityAuditBot(commands.Bot):
         activity_log[user_id].append(now)
         activity_log[user_id] = [t for t in activity_log[user_id] if now - t < TIME_WINDOW]
 
+        # Clean up expired user history to avoid memory leaks.
+        if not activity_log[user_id]:
+            del activity_log[user_id]
+            return
+
         if len(activity_log[user_id]) > MAX_MESSAGES:
             blacklisted_users.add(user_id)
             
@@ -86,7 +91,7 @@ class SecurityAuditBot(commands.Bot):
                 attack_type="RATE_LIMIT_VIOLATION", 
                 username=username, 
                 user_id=user_id, 
-                evidence_detail=f"Flooded {len(activity_log[user_id])} network packets in {TIME_WINDOW}s."
+                evidence_detail=f"Sent {len(activity_log[user_id])} messages in {TIME_WINDOW}s."
             )
 
             embed = discord.Embed(
@@ -102,8 +107,11 @@ class SecurityAuditBot(commands.Bot):
                 pass
             return
 
-        #  Heuristic content analysis (Phishing)
-        if re.search(PHISHING_REGEX, message.content.lower()):
+        # Clean up the message to catch people trying to bypass the filter
+        sanitized_content = message.content.lower().replace("\u200b", "").replace("\n", "")
+
+        # Check the cleaned text against known phishing patterns
+        if re.search(PHISHING_REGEX, sanitized_content):
             try:
                 await message.delete()
             except discord.Forbidden:
@@ -155,12 +163,12 @@ async def audit_status(interaction: discord.Interaction):
 @bot.tree.command(name="unblock_user", description="Removes a specific user from the active security blacklist.") 
 @app_commands.checks.has_permissions(administrator=True)
 @app_commands.describe(user="The server member to lift restrictions from") 
-async def unblock_user(interaction: discord.Interaction, user: discord.Member):
+async def unblock_user(interaction: discord.Interaction, user: discord.User):
     if user.id in blacklisted_users:
         blacklisted_users.remove(user.id)
         if user.id in activity_log:
-            activity_log[user.id] = []
-        await interaction.response.send_message(f"Security clearances successfully restored for **{user.display_name}**.")
+            del activity_log[user.id]
+        await interaction.response.send_message(f"Security clearances successfully restored for **{user.name}**.")
     else:
         await interaction.response.send_message("ℹ Specified network identity holds no active restriction logs.", ephemeral=True)
 
