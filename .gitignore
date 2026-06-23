@@ -1,1 +1,5 @@
 .env
+security_audit.log
+__pycache__/
+*.log
+
